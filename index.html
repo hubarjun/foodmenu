@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <title>AR Menu - Food Items</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: sans-serif;
+      }
+      #example-scanning-overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 70px;
+        background: transparent;
+        z-index: 2;
+      }
+      #example-scanning-overlay.hidden {
+        display: none;
+      }
+      #example-scanning-overlay .inner {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #example-scanning-overlay img {
+        opacity: 0.8;
+        width: 60%;
+        align-self: center;
+      }
+      #cart {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 5;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Cart -->
+    <div id="cart">🛒 Cart: <span id="cart-count">0</span></div>
+
+    <!-- Scanner Overlay -->
+    <div id="example-scanning-overlay" class="hidden">
+      <div class="inner">
+        <img
+          src="https://cdn.glitch.global/fd1ba06b-d9f9-4639-b62d-5a8d906708d3/evital%20placeholder.png?v=1740201523632"
+        />
+      </div>
+    </div>
+
+    <a-scene
+      mindar-image="uiScanning: #example-scanning-overlay; imageTargetSrc: https://cdn.glitch.global/fd1ba06b-d9f9-4639-b62d-5a8d906708d3/food-menu.mind?v=1740201512099; uiLoading: no;"
+      color-space="sRGB"
+      renderer="alpha:true"
+      device-orientation-permission-ui="enabled: false"
+      xr-mode-ui="enabled: false"
+      emitevents="true"
+      loading-screen="dotsColor: white; backgroundColor: black"
+      cursor="rayOrigin: mouse"
+      raycaster="objects: .clickable"
+    >
+      <a-assets>
+        <!-- Food item images -->
+        <img id="idly" src="idly.png" />
+        <img id="dosa" src="dosa.png" />
+        <img id="poori" src="poori.png" />
+      </a-assets>
+
+      <a-camera
+        position="0 0 0"
+        look-controls="enabled: false"
+        cursor="fuse: false; rayOrigin: mouse;"
+        raycaster="far: 30000; objects: .clickable"
+      ></a-camera>
+
+      <!-- Idly Target -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-plane src="#idly" height="0.7" width="0.7"></a-plane>
+      </a-entity>
+
+      <!-- Dosa Target -->
+      <a-entity mindar-image-target="targetIndex: 1">
+        <a-plane src="#dosa" height="0.7" width="1.2"></a-plane>
+      </a-entity>
+
+      <!-- Poori Target -->
+      <a-entity mindar-image-target="targetIndex: 2">
+        <a-plane src="#poori" height="0.7" width="0.7"></a-plane>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      let cart = {};
+      let currentItem = null;
+
+      // Target detection events
+      document.querySelectorAll("[mindar-image-target]").forEach((target, i) => {
+        target.addEventListener("targetFound", () => {
+          if (i === 0) currentItem = "Idly";
+          if (i === 1) currentItem = "Dosa";
+          if (i === 2) currentItem = "Poori";
+          addItem(); // auto add when target is found (optional)
+        });
+        target.addEventListener("targetLost", () => {
+          currentItem = null;
+        });
+      });
+
+      function addItem() {
+        if (!currentItem) return;
+        cart[currentItem] = (cart[currentItem] || 0) + 1;
+        updateCart();
+      }
+
+      function updateCart() {
+        const total = Object.values(cart).reduce((a, b) => a + b, 0);
+        document.getElementById("cart-count").innerText = total;
+        console.log("Cart:", cart);
+      }
+    </script>
+  </body>
+</html>
