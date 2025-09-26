@@ -7,10 +7,11 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <title>AR Menu - Food Items</title>
     <style>
-      body {
+      * {
         margin: 0;
-        overflow: hidden;
-        font-family: sans-serif;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Montserrat", sans-serif;
       }
       #example-scanning-overlay {
         display: flex;
@@ -24,19 +25,57 @@
         background: transparent;
         z-index: 2;
       }
-      #example-scanning-overlay.hidden {
-        display: none;
+      @media (min-aspect-ratio: 1/1) {
+        #example-scanning-overlay .inner {
+          width: 50vh;
+          height: 50vh;
+        }
+      }
+      @media (max-aspect-ratio: 1/1) {
+        #example-scanning-overlay .inner {
+          width: 80vw;
+          height: 80vw;
+        }
       }
       #example-scanning-overlay .inner {
-        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
+        background: linear-gradient(to right, white 10px, transparent 10px) 0 0,
+          linear-gradient(to right, white 10px, transparent 10px) 0 100%,
+          linear-gradient(to left, white 10px, transparent 10px) 100% 0,
+          linear-gradient(to left, white 10px, transparent 10px) 100% 100%,
+          linear-gradient(to bottom, white 10px, transparent 10px) 0 0,
+          linear-gradient(to bottom, white 10px, transparent 10px) 100% 0,
+          linear-gradient(to top, white 10px, transparent 10px) 0 100%,
+          linear-gradient(to top, white 10px, transparent 10px) 100% 100%;
+        background-repeat: no-repeat;
+        background-size: 40px 40px;
+      }
+      #example-scanning-overlay.hidden {
+        display: none;
       }
       #example-scanning-overlay img {
         opacity: 0.8;
-        width: 60%;
+        width: 80%;
         align-self: center;
+      }
+      #example-scanning-overlay .inner .scanline {
+        position: absolute;
+        width: 100%;
+        height: 10px;
+        background: white;
+        animation: move 2s linear infinite;
+      }
+      @keyframes move {
+        0%,
+        100% {
+          top: 0%;
+        }
+        50% {
+          top: calc(100% - 10px);
+        }
       }
       #cart {
         position: fixed;
@@ -48,91 +87,170 @@
         font-size: 14px;
         font-weight: bold;
         z-index: 5;
+        cursor: pointer;
+      }
+      #cart-details {
+        position: fixed;
+        top: 50px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 200px;
+        display: none;
+        z-index: 6;
+      }
+      #cart-details ul {
+        list-style: none;
+        padding: 0;
+      }
+      #cart-details li {
+        margin: 5px 0;
       }
     </style>
   </head>
   <body>
-    <!-- Cart -->
-    <div id="cart">🛒 Cart: <span id="cart-count">0</span></div>
-
     <!-- Scanner Overlay -->
     <div id="example-scanning-overlay" class="hidden">
       <div class="inner">
-        <img
-          src="https://cdn.glitch.global/fd1ba06b-d9f9-4639-b62d-5a8d906708d3/evital%20placeholder.png?v=1740201523632"
-        />
+        <img src="food.png" />
+        <div class="scanline"></div>
       </div>
+    </div>
+    <!-- Cart -->
+    <div id="cart">🛒 Cart: <span id="cart-count">0</span></div>
+    <div id="cart-details">
+      <h4>Your Order</h4>
+      <ul id="cart-list"></ul>
+      <p>
+        <b>Total: ₹<span id="cart-total">0</span></b>
+      </p>
     </div>
 
     <a-scene
-      mindar-image="uiScanning: #example-scanning-overlay; imageTargetSrc: https://cdn.glitch.global/fd1ba06b-d9f9-4639-b62d-5a8d906708d3/food-menu.mind?v=1740201512099; uiLoading: no;"
+      mindar-image="uiScanning: #example-scanning-overlay;imageTargetSrc: https://cdn.jsdelivr.net/gh/hubarjun/foodmenu/foodmenu.mind;uiLoading: no;"
       color-space="sRGB"
       renderer="alpha:true"
       device-orientation-permission-ui="enabled: false"
       xr-mode-ui="enabled: false"
-      emitevents="true"
-      loading-screen="dotsColor: white; backgroundColor: black"
       cursor="rayOrigin: mouse"
       raycaster="objects: .clickable"
     >
       <a-assets>
-        <!-- Food item images -->
-        <img id="idly" src="idly.png" />
-        <img id="dosa" src="dosa.png" />
-        <img id="poori" src="poori.png" />
+        <img id="idly" src="idly.jpg" />
+        <img id="dosa" src="dosa.jpg" />
+        <img id="poori" src="poori.jpg" />
       </a-assets>
 
-      <a-camera
-        position="0 0 0"
-        look-controls="enabled: false"
-        cursor="fuse: false; rayOrigin: mouse;"
-        raycaster="far: 30000; objects: .clickable"
-      ></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Idly Target -->
+      <!-- Idly -->
       <a-entity mindar-image-target="targetIndex: 0">
         <a-plane src="#idly" height="0.7" width="0.7"></a-plane>
+        <a-plane
+          class="clickable"
+          color="green"
+          position="0 -0.6 0"
+          width="0.3"
+          height="0.2"
+          text="value: +; align: center; color: white"
+          onclick="addItem('Idly')"
+        ></a-plane>
+        <a-plane
+          class="clickable"
+          color="red"
+          position="0.4 -0.6 0"
+          width="0.3"
+          height="0.2"
+          text="value: -; align: center; color: white"
+          onclick="removeItem('Idly')"
+        ></a-plane>
       </a-entity>
 
-      <!-- Dosa Target -->
+      <!-- Dosa -->
       <a-entity mindar-image-target="targetIndex: 1">
         <a-plane src="#dosa" height="0.7" width="1.2"></a-plane>
+        <a-plane
+          class="clickable"
+          color="green"
+          position="0 -0.6 0"
+          width="0.3"
+          height="0.2"
+          text="value: +; align: center; color: white"
+          onclick="addItem('Dosa')"
+        ></a-plane>
+        <a-plane
+          class="clickable"
+          color="red"
+          position="0.4 -0.6 0"
+          width="0.3"
+          height="0.2"
+          text="value: -; align: center; color: white"
+          onclick="removeItem('Dosa')"
+        ></a-plane>
       </a-entity>
 
-      <!-- Poori Target -->
+      <!-- Poori -->
       <a-entity mindar-image-target="targetIndex: 2">
         <a-plane src="#poori" height="0.7" width="0.7"></a-plane>
+        <a-plane
+          class="clickable"
+          color="green"
+          position="0 -0.6 0"
+          width="0.3"
+          height="0.2"
+          text="value: +; align: center; color: white"
+          onclick="addItem('Poori')"
+        ></a-plane>
+        <a-plane
+          class="clickable"
+          color="red"
+          position="0.4 -0.6 0"
+          width="0.3"
+          height="0.2"
+          text="value: -; align: center; color: white"
+          onclick="removeItem('Poori')"
+        ></a-plane>
       </a-entity>
     </a-scene>
 
     <script>
       let cart = {};
-      let currentItem = null;
+      const prices = { Idly: 30, Dosa: 50, Poori: 40 };
 
-      // Target detection events
-      document.querySelectorAll("[mindar-image-target]").forEach((target, i) => {
-        target.addEventListener("targetFound", () => {
-          if (i === 0) currentItem = "Idly";
-          if (i === 1) currentItem = "Dosa";
-          if (i === 2) currentItem = "Poori";
-          addItem(); // auto add when target is found (optional)
-        });
-        target.addEventListener("targetLost", () => {
-          currentItem = null;
-        });
-      });
-
-      function addItem() {
-        if (!currentItem) return;
-        cart[currentItem] = (cart[currentItem] || 0) + 1;
+      function addItem(item) {
+        cart[item] = (cart[item] || 0) + 1;
         updateCart();
       }
-
-      function updateCart() {
-        const total = Object.values(cart).reduce((a, b) => a + b, 0);
-        document.getElementById("cart-count").innerText = total;
-        console.log("Cart:", cart);
+      function removeItem(item) {
+        if (cart[item]) {
+          cart[item]--;
+          if (cart[item] === 0) delete cart[item];
+          updateCart();
+        }
       }
+      function updateCart() {
+        const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+        document.getElementById("cart-count").innerText = totalItems;
+
+        let totalPrice = 0;
+        let listHTML = "";
+        for (const [item, qty] of Object.entries(cart)) {
+          const price = prices[item] * qty;
+          totalPrice += price;
+          listHTML += `<li>${item} x ${qty} = ₹${price}</li>`;
+        }
+        document.getElementById("cart-list").innerHTML = listHTML;
+        document.getElementById("cart-total").innerText = totalPrice;
+      }
+
+      // Toggle cart details popup
+      document.getElementById("cart").addEventListener("click", () => {
+        const details = document.getElementById("cart-details");
+        details.style.display =
+          details.style.display === "block" ? "none" : "block";
+      });
     </script>
   </body>
 </html>
